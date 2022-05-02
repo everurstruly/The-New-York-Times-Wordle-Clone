@@ -9,7 +9,7 @@
 	<link rel="stylesheet" href="./assets/css/main.css">
 	<script defer src="./assets/js/main.js" type="module"></script>
 </head>
-<body id="body" data-color-theme="light" data-js-default-theme="light">
+<body id="body" data-color-theme="dark" data-js-default-theme="light">
 	<!-- ================================= PAGE LAYOUT ================================= -->
 	<div id="app">
 		<!-- ================================= HEADER ================================= -->
@@ -17,7 +17,12 @@
 			<!-- ================================= NAVBAR ================================= -->
 			<nav class="navbar">
 				<div class="navbar__content container">
-					<a href="https://oghenetefa.github.io/wordle-js/" class="navbar__brand">Wordle</a>
+					<a 
+						href="https://oghenetefa.github.io/wordle-nyt-clone-js/" 
+						class="navbar__brand"
+					>
+						Wordle
+					</a>
 
 					<!-- ============= MENU TOGGLE ============= -->
 					<button 
@@ -238,7 +243,7 @@
 		<main id="main">
 			<!-- ================================= WORDLE-GAME ================================= -->
 			<section id="wordle-game" class="wordle-game">
-				<div class="wordle-game__content container">
+				<div class="wordle-game__content">
 					<!-- ============= WORDLE-GAME OUTCOME MSG ============= -->
 					<p class="wordle-game__outcome">Plans</p>
 
@@ -419,19 +424,19 @@
 						<div class="wordle-game__stats-body">
 							<h4 class="wordle-game__stats-heading">STATISTICS</h4>
 							<ul class="metrics">
-								<li class="metrics-item">
+								<li id="wordle-stats-played" class="metrics-item">
 									<span class="value">1</span>
 									<span class="text">Played</span>
 								</li>
-								<li class="metrics-item">
+								<li id="wordle-stats-wins" class="metrics-item">
 									<span class="value">0</span>
-									<span class="text">Win %</span>
+									<span class="text">Wins</span>
 								</li>
-								<li class="metrics-item">
+								<li id="wordle-stats-wining-streak" class="metrics-item">
 									<span class="value">0</span>
-									<span class="text">Current Streak</span>
+									<span class="text">Wining Streak</span>
 								</li>
-								<li class="metrics-item">
+								<li id="wordle-stats-max-wining-streak" class="metrics-item">
 									<span class="value">0</span>
 									<span class="text">Max Streak</span>
 								</li>
@@ -461,14 +466,14 @@
 							</ol>
 
 
-							<div class="wordle-game__session display-none">
-								<button data-for-session="play-again" class="wordle-game__session-btn btn btn_blue-100 btn_shadow-a">Play again</button>
-								<button data-for-session="share" class="wordle-game__session-btn btn btn_crimson-100 btn_shadow-a">Share</svg>
+							<div class="wordle-game__session">
+								<button data-for-session="play-again" class="wordle-game__session-btn btn btn_blue-100">Play again</button>
+								<button data-for-session="share" class="wordle-game__session-btn btn btn_crimson-100">Share</svg>
 								</button>
 							</div>
 						</div>
 						<footer class="wordle-game__stats-footer">
-							<a href="#" class="ad">
+							<a href="https://oghenetefa.github.io/tic-tac-toe-js" class="ad">
 								<span class="ad__logo">
 									<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 80 80" fill="none">
 										<rect width="80" height="80" rx="13" fill="#F7DA21"/>
