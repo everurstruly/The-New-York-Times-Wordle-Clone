@@ -5,7 +5,7 @@ html {
 /*-----DIMENTIONS-----*/
 :root {
 	--navbar-height: 5rem;
-	--screen-boundry-x: .95rem;
+	--screen-boundry-x: 1rem;
 }
 
 /*-----COLORS-----*/
@@ -138,9 +138,9 @@ svg {
 		transform: scale(1.0);
 	}
 
-	68% {
+	50% {
 		opacity: 1;
-		transform: scale(1.17);
+		transform: scale(1.14);
 	}
 
 	100% {
@@ -157,7 +157,6 @@ svg {
 	45%,
 	75% {
 		transform: rotateX(90deg);
-		outline-color: var(--tile-clr);
 	}
 
 	100% {
@@ -314,7 +313,7 @@ svg {
 	padding: .55em 1em;
 	color: var(--clr-white-100);
 	text-decoration: none;
-	font-size: .913rem;
+	font-size: 1rem;
 }
 
 .navbar__menu-link:active,
@@ -393,7 +392,7 @@ svg {
 .navbar__nav-tagline {
 	flex-basis: 100%;
 	margin-top: 1rem;
-	font-size: .875rem;
+	font-size: .95rem;
 }
 
 /*================================= NAVBR - SM-SCREEN =================================*/
@@ -432,20 +431,20 @@ svg {
 
 	.navbar__brand {
 		flex-basis: 0;
-		font-size: 1.875rem;
-	}
-}
-
-/*================================= NAVBAR MD-SCREEN =================================*/
-@media screen and (min-width: 370px) {
-	.navbar__brand {
-		font-size: 2rem;
+		font-size: 1.95rem;
 	}
 
 	.navbar__toggle svg {
 		fill: var(--clr-white-100);
 		width: 1.5rem;
 		height: 1.5rem;
+	}
+}
+
+/*================================= NAVBAR MD-SCREEN =================================*/
+@media screen and (min-width: 338px) {
+	.navbar__brand {
+		font-size: 2rem;
 	}
 }
 
@@ -500,16 +499,17 @@ svg {
 	align-items: center;
 	justify-content: center;
 	border-radius: .25rem;
-	padding: .5em 1.1em;
+	padding: .75em 1.2em;
 	margin-bottom: .75rem;
 	font-size: 1em;
 	font-family: Arial, sans-serif;
+	text-transform: capitalize;
 	color: black;
 	background-color: white;
 	opacity: 1;
 	pointer-events: auto;
 	transform: translateY(0);
-	box-shadow: 0 2px 0 black;
+	box-shadow: 0 2px 2px dimgray;
 	transition: all 195ms linear;
 }
 
@@ -526,18 +526,18 @@ svg {
 /*============= WORDLE-GAME BOARD =============*/
 .wordle-game__board {
 	--tile-fliping-duration-ms: 600ms;
-	--tile-fliping-interval-ms: -485ms;
+	--tile-fliping-interval-ms: -230ms; /*of estimated duaration*/
 
-	--tile-bubble-duration-ms: 370ms;
-	--tile-bubble-interval-ms: -315ms;
+	--tile-bubble-duration-ms: 380ms;
+	--tile-bubble-interval-ms: -325ms; /*of estimated duaration*/
 
 	max-width: 20rem;
-	margin-bottom: .75rem;
+	margin-bottom: .875rem;
 	margin-inline: auto;
 }
 
 .wordle-game__board-row {
-	--gap: .375rem;
+	--gap: .35rem;
 	display: flex;
 	align-items: center;
 	column-gap: var(--gap);
@@ -550,7 +550,7 @@ svg {
 	aspect-ratio: 1;
 	font-size: 120%;
 	font-weight: bold;
-	font-family: cursive, sans-serif;
+	font-family: Helvetica, sans-serif;
 	text-transform: uppercase;
 	color: var(--clr-white-100);
 	text-align: center;
@@ -582,7 +582,7 @@ svg {
 }
 
 .wordle-game__board-tile.guessing {
-	--guessing-duration: 135ms;
+	--guessing-duration: 125ms;
 	animation: guessingLetter var(--guessing-duration) linear forwards;
 	color: var(--clr-white-100);
 	outline-color: var(--guessing-outline-clr);
@@ -594,7 +594,7 @@ svg {
 }
 
 .wordle-game__board-tile.notifyGuessError {
-	--shaking-duration: 270ms;
+	--shaking-duration: 315ms;
 	animation: shakeLetter var(--shaking-duration) linear forwards;
 }
 
@@ -607,11 +607,18 @@ svg {
 }
 
 .wordle-game__keyboard {
+	margin-top: auto;
 	--key-width-mx: 2.65rem;
 	display: flex;
 	flex-direction: column;
 	max-width: 32rem;
 	margin-inline: auto;
+	row-gap: .25rem;
+
+	margin-left: auto;
+	margin-right: auto;
+	padding-left: .25em;
+	padding-right: .25em;
 	row-gap: .25rem;
 }
 
@@ -619,7 +626,8 @@ svg {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	column-gap: .36rem;
+	column-gap: .25rem;
+/*	column-gap: .36rem;*/
 }
 
 .wordle-game__keyboard-row:nth-child(2) {
@@ -638,13 +646,13 @@ svg {
 	cursor: pointer;
 	padding-left: .5em;
 	padding-right: .5em;
-	height: 2.5rem;
+	height: 3.15rem;
 	max-width: var(--key-width-mx);
 	text-align: center;
 	color: white;
 	background-color: var(--letter-state);
-	font-size: .75rem;
-	font-family: monospace;
+	font-size: .9rem;
+	font-family: monospace, sans-serif;
 	text-transform: capitalize;
 	transition: outline 170ms linear;
 	outline-offset: -2px;
@@ -653,33 +661,6 @@ svg {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 }
-
-@media screen and (max-width: 275px) {
-	.wordle-game__keyboard {
-		margin-left: calc(-1 * var(--screen-boundry-x));
-		margin-right: calc(-1 * var(--screen-boundry-x));
-		padding-left: .27em;
-		padding-right: .27em;
-		row-gap: .3rem;
-	}
-
-	.wordle-game__keyboard-row {
-		column-gap: .25rem;
-	}
-
-	.wordle-game__keyboard-key {
-		height: 2.35rem;
-		font-size: .65em;
-		padding-left: .25em;
-	}
-
-	.wordle-game__keyboard-key[data-keyboard-key="enter"] {
-		writing-mode: vertical-lr;
-		transform: rotate(180deg);
-		font-size: .5em;
-	}
-}
-
 
 .wordle-game__keyboard-key[data-letter-state="success"] {
 	--letter-state: var(--correct-clr);
@@ -708,18 +689,39 @@ svg {
 	max-width: 4.35rem;
 }
 
-@media screen and (min-width: 380px) {
+@media screen and (max-width: 285px) {
 	.wordle-game__keyboard {
-		row-gap: .5rem;
+		row-gap: .125rem;
 	}
 
 	.wordle-game__keyboard-row {
-		column-gap: .4rem;
+		column-gap: .2rem;
 	}
 
 	.wordle-game__keyboard-key {
-		height: 3.5rem;
-		font-size: 1rem;
+		height: 3rem;
+		font-size: .8em;
+	}
+
+	.wordle-game__keyboard-key[data-keyboard-key="enter"] {
+		writing-mode: vertical-lr;
+		transform: rotate(180deg);
+		font-size: .5em;
+	}
+}
+
+@media screen and (min-width: 385px) {
+	.wordle-game__keyboard {
+		row-gap: .35rem;
+	}
+
+	.wordle-game__keyboard-row {
+		column-gap: .35rem;
+	}
+
+	.wordle-game__keyboard-key {
+		height: 3.75rem;
+		font-size: 1.2rem;
 	}
 
 	.wordle-game__keyboard-key svg {
