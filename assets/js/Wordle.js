@@ -9,10 +9,6 @@ const LETTER_STATE = {
   WRONG: 'secondary'
 }
 
-function clearOutData() {
-  localStorage.removeItem(SESSION_DATA_KEY)
-}
-
 export default function Wordle() {
   const totalLives = 6;
   let board;
@@ -29,6 +25,7 @@ export default function Wordle() {
     board: { get: () => [...board] },
     rowGuessingAt: { get: () => currentRowAt },
     wordToGuess: { get: () => [...wordToGuess].join("") },
+    totalLives: { get: () => totalLives },
     remainingLives: { get: () => remainingLives },
     hasGuessedWord: { get: () => hasGuessedWord },
     hasGuessedWordRow: { get: () => hasGuessedWordRow },
@@ -64,12 +61,13 @@ export default function Wordle() {
     hasGuessedWord = false;
     hasGuessedWordRow = null;
     remainingLives = totalLives;
-    currentRowAt = totalLives - remainingLives;
+    currentRowAt = 0;
     syncSessionData();
   }
 
   this.validateGuess = (word, callBack) => {
-    if (word.length < wordToGuess.length) callBack('short');
+    if (hasGuessedWord || remainingLives === 0) return;
+    else if (word.length < wordToGuess.length) callBack('short');
     else if (word.length > wordToGuess.length) callBack('long');
     else if (guessedWords.includes(word)) callBack('has guessed');
     else if (!isWordInDictionary(word)) callBack('invalid');
@@ -125,6 +123,10 @@ export default function Wordle() {
         return { value: null, state: LETTER_STATE.NONE }
       })
     );
+  }
+
+  this.clearStoredData = () => {
+    localStorage.removeItem(SESSION_DATA_KEY)
   }
 
   const syncSessionData = () => {
