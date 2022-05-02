@@ -1,10 +1,15 @@
 import Wordle from './Wordle.js';
 
+
+function getTargetElement(identifier) {
+	return document.querySelector(
+		`${identifier[0]==='#' ?identifier :'.'+identifier}`);
+}
+
 function handleToggleTrigger(e) {
 	const toggleType = e.currentTarget.dataset.toggle;
-	const targetSelector = e.currentTarget.dataset.target;
-	let targetElement = document.querySelector(`
-		${targetSelector[0] === '#' ? targetSelector : '.' + targetSelector}`)
+	const targetIdentifier = e.currentTarget.dataset.target;
+	let targetElement = getTargetElement(targetIdentifier);
 
 	if (e.currentTarget.getAttribute('arial-expanded') === 'false') {
 		if (toggleType === 'modal' || 'offcanvas') {
@@ -20,42 +25,71 @@ function handleToggleTrigger(e) {
 }
 
 function handleToggleDismiss(e) {
-	const toggleType = e.currentTarget.dataset.dismiss;
-	const targetSelector = e.currentTarget.dataset.target;
-	let targetElement = document.querySelector(`
-		${targetSelector[0] === '#' ? targetSelector : '.' + targetSelector}`)
-
 	if (e.target !== e.currentTarget) return
+
+	const toggleType = e.currentTarget.dataset.dismiss;
+	const targetIdentifier = e.currentTarget.dataset.target;
+	let targetElement = getTargetElement(targetIdentifier);
 
 	if (toggleType === 'modal' || 'offcanvas') {
 		targetElement.classList.remove('show')
-		document.querySelectorAll(`[arial-controls="${targetSelector}"]`)
+		document.querySelectorAll(`[arial-controls="${targetIdentifier}"]`)
 			.forEach(toggle => toggle.setAttribute('arial-expanded', 'false'));
 	}
 }
 
 function handleThemeToggle(e) {
 	const toggleType = e.currentTarget.dataset.toggle;
-	const targetSelector = e.currentTarget.dataset.target;
-	let targetElement = document.querySelector(`
-		${targetSelector[0] === '#' ?targetSelector :'.'+targetSelector}`);
+	const targetIdentifier = e.currentTarget.dataset.target;
+	let targetElement = getTargetElement(targetIdentifier);
 
 	if (e.currentTarget.getAttribute('arial-expanded') === 'false') {
 		targetElement.setAttribute('data-color-theme',
 			 targetElement.dataset.jsDefaultTheme);
-		e.currentTarget.setAttribute('arial-expanded', true);
+		e.currentTarget.setAttribute('arial-expanded', 'true');
 	} else {
 		targetElement.setAttribute('data-color-theme',
 			 e.currentTarget.dataset.theme);
-		e.currentTarget.setAttribute('arial-expanded', false);
+		e.currentTarget.setAttribute('arial-expanded', 'false');
 	}
 }
+
+const triggerToggles = document.querySelectorAll('[data-toggle]');
+triggerToggles.forEach(toggle => 
+	toggle.addEventListener('click', handleToggleTrigger));
+
+const dismissToggles = document.querySelectorAll('[data-dismiss]');
+dismissToggles.forEach(toggle => 
+	toggle.addEventListener('click', handleToggleDismiss));
+
+const colorThemeToggles = document.querySelectorAll(`[data-toggle='color-theme']`)
+colorThemeToggles.forEach(toggle => 
+	toggle.addEventListener('input', handleThemeToggle));
+
+// ============================================================
+// ============================================================
 
 function handleNavMenuItem(e) {
 	const navbarNav = e.target.closest('.navbar__nav');
 	const navbarNavCloseBtn = navbarNav.querySelector(
 		'.navbar__nav-header [data-dismiss]');
 	navbarNavCloseBtn.click();
+}
+
+const navMenuItems = document.querySelectorAll('.navbar__menu-item')
+navMenuItems.forEach(navItem => 
+	navItem.addEventListener('click', handleNavMenuItem));
+
+// ============================================================
+// ============================================================
+
+function handleSectionKeyNavigations(e) {
+	// escape key
+	if (e.keyCode === 27) {
+		const sectionDismissToggle = visibleSectionElement.querySelector(`
+		[data-dismiss][data-target=${visibleSectionElement.getAttribute('id')}`);
+		sectionDismissToggle.click();
+	}
 }
 
 function handleWordleSections(sections, observer) {
@@ -68,25 +102,37 @@ function handleWordleSections(sections, observer) {
 	})
 }
 
-function handleWordleSectionsClass(sections, observer) {
+function handleWordleSectionsClassMutated(sections, observer) {
 	sections.forEach(section => {
 		if (section.type === 'attributes'
 			&& section.attributeName === 'class'
 			&& section.target.matches('.show, .active')
-		) {
-			visibleSectionElement = section.target;
-		} else visibleSectionElement = wordleSectionElements[0];
+		) visibleSectionElement = section.target;
+		else visibleSectionElement = wordleSectionElements[0];
 	})
 }
 
-function handleSectionKeyNavigations(e) {
-	// escape key
-	if (e.keyCode === 27) {
-		const sectionDismissToggle = visibleSectionElement.querySelector(`
-		[data-dismiss][data-target=${visibleSectionElement.getAttribute('id')}`);
-		sectionDismissToggle.click();
-	}
-}
+
+const navbarNav = document.querySelector('.navbar__nav');
+const wordleGameSection = document.querySelector('#wordle-game');
+const wordleSectionSelectors = [
+		'wordle-game', 'wordle-game__stats', 'settings', 'how-to-play'];
+const wordleSectionElements = wordleSectionSelectors.map(
+		section => document.getElementById(section));
+
+let visibleSectionElement = wordleSectionElements[0];
+
+const wordleSectionsScrollObserver = new IntersectionObserver(handleWordleSections, {});
+wordleSectionsScrollObserver.observe(wordleGameSection);
+
+const observeClassOption = { attributes: true };
+const wordleSectionClassObserver = new MutationObserver(handleWordleSectionsClassMutated);
+wordleSectionClassObserver.observe(navbarNav, observeClassOption);
+wordleSectionElements.forEach(section => 
+	wordleSectionClassObserver.observe(section, observeClassOption));
+
+// ============================================================
+// ============================================================
 
 const WORDLE_TILE_STATE = {
 	reveal: 'revealWordState',
@@ -95,11 +141,21 @@ const WORDLE_TILE_STATE = {
 	guessWordWon: 'notifyGuessWon'
 }
 
+const WORDLE_TILE_STATE_ANIMATION = {
+	reveal: 'showLetterState',
+	guessing: 'guessingLetter',
+	guessingError: 'shakeLetter',
+	guessWordWon: 'bubbleLetter'
+}
+
 function handleWordleGameKeyNavigation(e) {
-	// backspace key
-	if (e.keyCode === 8) handleBackspaceGuessing();
+	if (wordleGameLogic.hasGuessedWord 
+		|| wordleGameLogic.remainingLives === 0) return;
+
 	// enter key
 	if (e.keyCode === 13) handleRecentGuess();
+	// backspace key
+	if (e.keyCode === 8) handleBackspaceGuessing();
 	// a-z keys
 	if (e.keyCode>64 && e.keyCode<91) {
 		const alphabet = e.code.slice(3);
@@ -107,15 +163,24 @@ function handleWordleGameKeyNavigation(e) {
 	}
 }
 
-function handleBoardGuessInsertion(value) {
+function handleWordleKeyboardInput(e) {
 	if (wordleGameLogic.hasGuessedWord 
 		|| wordleGameLogic.remainingLives === 0) return;
+
+	const clickedKey = e.target.dataset.keyboardKey;
+	if (clickedKey === 'enter') handleRecentGuess();
+	if (clickedKey === 'backspace') handleBackspaceGuessing();
+	if (clickedKey.match(/^[a-z]$/)) handleBoardGuessInsertion(clickedKey);
+}
+
+function handleBoardGuessInsertion(value) {
 	if (currentLetterIndex > wordleGameLogic.wordToGuess.length - 1) {
 		shakeGuessWord(wordleGameLogic.rowGuessingAt);
 		return;
 	}
+
 	let currentLetter = wordleBoard.children[wordleGameLogic.rowGuessingAt]
-		.children[currentLetterIndex];
+						.children[currentLetterIndex];
 	currentLetter.innerText = value;
 	currentLetter.setAttribute('data-letter-state', WORDLE_TILE_STATE.guessing);
 	currentLetter.style.animationDuration = 'var(--guessing-duration)';
@@ -124,35 +189,56 @@ function handleBoardGuessInsertion(value) {
 }
 
 function handleBackspaceGuessing() {
-	if (currentLetterIndex<1 || wordleGameLogic.hasGuessedWord) return
+	if (currentLetterIndex<1 || wordleGameLogic.hasGuessedWord) {
+		shakeGuessWord(wordleGameLogic.rowGuessingAt);
+		return;
+	};
+
 	currentLetterIndex--;
 	let currentLetter = wordleBoard.children[wordleGameLogic.rowGuessingAt]
-		.children[currentLetterIndex];
+						.children[currentLetterIndex];
 	currentLetter.innerText = '';
 	currentLetter.removeAttribute('data-letter-state');
 	currentLetter.classList.remove(WORDLE_TILE_STATE.guessing);
 }
 
-function handleWordleKeyboardInput(e) {
-	const keyInput = e.target.dataset.keyboardKey;
-	if (keyInput==='enter') handleRecentGuess();
-	if (keyInput==='backspace') handleBackspaceGuessing();
-	if (keyInput.match(/^[a-z]$/)) handleBoardGuessInsertion(keyInput);
+function getDelayValue(duration, delay) {
+	let operator = delay[0];
+	let durationValue = parseInt(duration);
+	let delayValue = parseInt(delay.slice(1, -2));
+	if (operator === '+') return durationValue + delayValue;
+	if (operator === '-') return durationValue - delayValue;
+	return 0;
 }
 
-function getCleanInterval(duration, dirtyIntrval) {
-	return eval(`${duration}${dirtyIntrval[1]}${dirtyIntrval.slice(2, -2)}`);
+function showGameplayOutcome(msg) {
+	const wordleStatisticsProcessingTimeMs = 600;
+	wordleOutcomeDisplay.innerText = msg;
+	wordleOutcomeDisplay.classList.add('show');
+	wordleOutcomeDisplay.addEventListener('transitionend', () => {
+		if (!wordleOutcomeDisplay.classList.contains('show')) return;
+
+		// message still displaying
+		const wordleStatsToggle = document.querySelector(
+			`[data-target="wordle-game__stats"]`);
+		setTimeout(() => {
+			if (wordleStatsToggle.getAttribute('arial-expanded') === 'false')
+				wordleStatsToggle.click();
+		}, wordleStatisticsProcessingTimeMs);
+	});
 }
 
-function updateWordleBoard() {
+function updateBoardGameplay() {
+	let lastFlippedTile = null;
+
 	const flipDuration = getComputedStyle(wordleBoard)
 		.getPropertyValue('--tile-fliping-duration-ms').slice(0, -2);
-	let dirtyFlipInterval = getComputedStyle(wordleBoard)
-		.getPropertyValue('--tile-fliping-interval-ms');
+	let flipDelayDifference = getComputedStyle(wordleBoard)
+		.getPropertyValue('--tile-fliping-interval-ms').trim();
 	const bubbleDuration = getComputedStyle(wordleBoard)
 		.getPropertyValue('--tile-bubble-duration-ms').slice(0, -2);
-	let dirtyBubbleInterval = getComputedStyle(wordleBoard)
-		.getPropertyValue('--tile-bubble-interval-ms');
+	let bubbleDelayDifference = getComputedStyle(wordleBoard)
+		.getPropertyValue('--tile-bubble-interval-ms').trim();
 
 	wordleGameLogic.board.forEach((word, wordIndex) => {
 		let wordleWordRow = Array.from(wordleBoard.children[wordIndex].children);
@@ -163,125 +249,117 @@ function updateWordleBoard() {
 			wordleLetterCol.innerText = letter.value || "";
 			letter.state && wordleLetterCol.setAttribute('data-letter-state', letter.state);
 			wordleLetterCol.style.setProperty('--flip-delay',
-				`${getCleanInterval(flipDuration, dirtyFlipInterval) * letterIndex}ms`);
+				`${getDelayValue(flipDuration, flipDelayDifference) * letterIndex}ms`);
 			wordleLetterCol.style.setProperty('--bubble-delay',
-				`${getCleanInterval(bubbleDuration, dirtyBubbleInterval) * letterIndex}ms`);
+				`${getDelayValue(bubbleDuration, bubbleDelayDifference) * letterIndex}ms`);
 
-			// flip tile after update
+			// flip after tile update
 			if (wordleLetterCol.matches('[data-letter-state]')) {
 				wordleLetterCol.style.animationDuration = 'var(--tile-fliping-duration-ms)';
 				wordleLetterCol.classList.add(WORDLE_TILE_STATE.reveal);
 			}
 		})
 
-		// show wining tiles
-		const lastFlippedTIle = wordleWordRow[wordleWordRow.length - 1];
-		lastFlippedTIle.addEventListener('animationend', (e) => {
-			// after last tile flip
-			if (wordleGameLogic.hasGuessedWord
-				&& wordIndex === wordleGameLogic.hasGuessedWordRow) {
-				wordleWordRow.forEach((letter, letterIndex) => {
+		if (wordleGameLogic.hasGuessedWord
+			&& wordleGameLogic.hasGuessedWordRow === wordIndex) 
+		{
+			lastFlippedTile = wordleWordRow.at(-1);
+		}
+
+		if (wordleGameLogic.remainingLives === 0 
+			&& wordIndex === wordleGameLogic.board.length -1) 
+		{
+			lastFlippedTile = wordleWordRow.at(-1);
+		}
+	})
+
+	lastFlippedTile 
+	&& lastFlippedTile.addEventListener('animationend', (e) => {
+		if (wordleGameLogic.hasGuessedWord) {
+			// animate wining tiles after flipping
+			if (e.animationName === WORDLE_TILE_STATE_ANIMATION.reveal) {
+				Array
+				.from(wordleBoard.children[wordleGameLogic.hasGuessedWordRow].children)
+				.forEach((letter, letterIndex) => {
 					letter.style.animationDuration = 'var(--tile-bubble-duration-ms)';
 					letter.classList.add(WORDLE_TILE_STATE.guessWordWon);
 				})
 			}
-		}, {once: true})
+
+			// display outcome if won
+			if (e.animationName === WORDLE_TILE_STATE_ANIMATION.guessWordWon) {
+				showGameplayOutcome('You Win!')
+			}	
+		}
+
+		if (wordleGameLogic.remainingLives === 0) {
+			if (e.animationName === WORDLE_TILE_STATE_ANIMATION.reveal) {
+				showGameplayOutcome(wordleGameLogic.wordToGuess.toUpperCase());
+			}
+		}
 	})
 }
 
 function updateKeyboardGuessedLetters() {
 	wordleGameLogic.guessedLetters.forEach(letter => {
-		wordleKeyboard.querySelector(`[data-keyboard-key="${letter.value}"]`)
+		wordleKeyboard.querySelector(
+			`[data-keyboard-key="${letter.value}"]`)
 			.setAttribute('data-letter-state', letter.state);
-		wordleKeyboard.querySelector(`[data-keyboard-key="${letter.value}"]`)
 	});
 }
 
 function shakeGuessWord(boardRow) {
-	const guessLetters = Array.from(wordleBoard.children[boardRow].children);
+	const guessLetters = Array
+			.from(wordleBoard.children[boardRow].children);
+
 	guessLetters.forEach(letter => {
 		letter.style.animationDuration = 'var(--shaking-duration)';
 		letter.classList.add(WORDLE_TILE_STATE.guessingError);
-		// return to guess animation end state
-		letter.addEventListener('animationend', () => {
-			letter.style.animationDuration = '0ms';
-			letter.classList.remove(WORDLE_TILE_STATE.guessingError);
-		}, { once: true })
+		// return to prev animation end state
+		letter.addEventListener('animationend', e => {
+			if (e.animationName === WORDLE_TILE_STATE_ANIMATION.guessingError){
+				letter.classList.remove(WORDLE_TILE_STATE.guessingError);
+			}
+		})
 	})
 }
 
 function flashWordleMessage(message) {
-	const displayTimeMs = 1000;
-	let msgItem = document.querySelector("#wordle-game__flash-msgs-item-template")
+	const displayTimeMs = 1200;
+	let msgItem = document
+		.querySelector("#wordle-game__flash-msgs-item-template")
 		.content.cloneNode(true)
 		.querySelector('.wordle-game__flash-msgs-item');
 	msgItem.querySelector('.text').innerText = message;
-
 	wordleFlashMsg.prepend(msgItem);
 	setTimeout(() => {
 		msgItem.classList.add('hide')
-		msgItem.addEventListener('transitionend', () => {
-			msgItem.remove();
-		})
+		msgItem.addEventListener('transitionend', () => msgItem.remove());
 	}, displayTimeMs)
 }
 
 function handleRecentGuess() {
-	let guess = '';
-	// creat guess string
-	let word = Array.from(wordleBoard.children[wordleGameLogic.rowGuessingAt].children)
-	word.forEach(letter => guess += letter.innerText.toLowerCase());
+	const wordInput = Array.from(wordleBoard
+					.children[wordleGameLogic.rowGuessingAt].children);
+	const guess = wordInput.reduce(
+		(guess, letter) => guess += letter.innerText.toLowerCase(), '')
 
 	wordleGameLogic.validateGuess(guess, (response) => {
 		if (response === 'valid') {
 			wordleGameLogic.handleGuess(guess);
 			handleWordleGameplay();
-		} else if (response === 'short' 
-				|| response === 'long') {
-			shakeGuessWord(wordleGameLogic.rowGuessingAt)
+			updatePlayerStatistics();
+		} else if (response === 'short' || response === 'long') {
+			flashWordleMessage('Word too short');
 		} else if (response === 'has guessed') {
-			shakeGuessWord(wordleGameLogic.rowGuessingAt)
 			flashWordleMessage('Has guessed word');
 		} else if (response === 'invalid') {
-			shakeGuessWord(wordleGameLogic.rowGuessingAt)
-			flashWordleMessage('word not in list')
+			flashWordleMessage('Word not accepted')
 		}
 	})
 }
 
-function displaySessionOutcome() {
-	let lastFlippedRowIndex = wordleGameLogic.hasGuessedWordRow 
-			|| wordleGameLogic.rowGuessingAt;
-	let lastFlippedTile = wordleBoard.children[lastFlippedRowIndex].lastElementChild;
-
-	const performTask = (msg) => {
-		wordleOutcomeDisplay.innerText = msg;
-		wordleOutcomeDisplay.classList.add('show');
-		wordleOutcomeDisplay.addEventListener('transitionend', () => {
-			const wordleStatsToggle = document.querySelector(
-				`[data-target="wordle-game__stats"]`);
-
-			setTimeout(() => {
-				if (wordleStatsToggle.getAttribute('arial-expanded')==='false') {
-					wordleStatsToggle.click()
-				}
-			}, 700);
-		}, {once: true})
-	}
-
-	lastFlippedTile.addEventListener('animationend', e => {
-		// didnt guess word
-		if (wordleGameLogic.remainingLives === 0
-			&& e.target.classList.contains(WORDLE_TILE_STATE.reveal))
-			performTask(wordleGameLogic.wordToGuess.toUpperCase());
-
-		// did guess word
-		if (wordleGameLogic.hasGuessedWord
-			&& e.target.classList.contains(WORDLE_TILE_STATE.guessWordWon))
-			performTask('You win!');
-	})
-}
-
+// or rebuild the page/section - me too lazy
 function clearPreviousGameplay() {
 	wordleOutcomeDisplay.classList.remove('show');
 	wordleKeyboardKeys.forEach(key => key.removeAttribute('data-letter-state'))
@@ -297,87 +375,154 @@ function clearPreviousGameplay() {
 	})
 }
 
-function handleSessionBtnUsability() {
-	const btns = wordleSessionContent.querySelectorAll('.wordle-game__session-btn');
+// ============================================================
+// ============================================================
 
-	const performTask = (e) => {
-		e.preventDefault();
-		const clickedOn = e.target.dataset.forSession;
-		const closeSectionBtn = document.querySelector('.wordle-game__stats-close')
-		if (clickedOn === 'play-again') {
-			wordleGameLogic.newGame();
-			clearPreviousGameplay()
-			handleWordleGameplay();
-			closeSectionBtn.click();
-		}
-	}
-
-	if (wordleGameLogic.hasGuessedWord || wordleGameLogic.remainingLives === 0) {
-		wordleSessionContent.classList.remove('display-none');
-		btns.forEach(btn => btn.addEventListener('click', performTask));
+function handleAlterBtn(e) {
+	e.preventDefault();
+	const clickedOn = e.target.dataset.forSession;
+	const closeSectionBtn = document.querySelector(
+			'.wordle-game__stats-close')
+	// play again
+	if (clickedOn === 'play-again') {
+		wordleGameLogic.newGame();
+		clearPreviousGameplay();
+		handleWordleGameplay();
+		closeSectionBtn.click();
 	} else {
-		wordleSessionContent.classList.add('display-none');
-		btns.forEach(btn => btn.removeEventListener('click', performTask));
+		console.log('sharing not implemented')
 	}
 }
+
+function handleGameAlterAbility() {
+	// win or loose
+	if (wordleGameLogic.hasGuessedWord 
+		|| wordleGameLogic.remainingLives === 0) 
+	{
+		wordleGameAlterBlock.classList.remove('display-none');
+		wordleGameAlterBtns.forEach(btn => 
+			btn.addEventListener('click', handleAlterBtn));
+	} else {
+		wordleGameAlterBlock.classList.add('display-none')
+		wordleGameAlterBtns.forEach(btn => 
+			btn.removeEventListener('click', handleAlterBtn));
+	}
+}
+
+const wordleGameAlterBlock = document.querySelector('.wordle-game__session');
+const wordleGameAlterBtns = document.querySelectorAll('.wordle-game__session-btn');
+
+// ============================================================
+// ============================================================
+
+let PLAYER_STATISTICS_DATA = {};
+const PLAYER_STATISTICS_DATA_KEY = 'oghenetefa-wordle-clone-statistics-data';
+
+function savePlayerStatistics() {
+	localStorage.setItem(PLAYER_STATISTICS_DATA_KEY, 
+		JSON.stringify({...PLAYER_STATISTICS_DATA}));
+}
+
+function loadInPlayerStatistics() {
+	const data = JSON.parse(
+		localStorage.getItem(PLAYER_STATISTICS_DATA_KEY));
+
+	if (data) {
+		PLAYER_STATISTICS_DATA.played = parseInt(data.played);
+		PLAYER_STATISTICS_DATA.wins = parseInt(data.wins);
+		PLAYER_STATISTICS_DATA.winingStreak = parseInt(data.winingStreak);
+		PLAYER_STATISTICS_DATA.maxWiningStreak = parseInt(data.maxWiningStreak);
+	} else {
+		PLAYER_STATISTICS_DATA.played = 0;
+		PLAYER_STATISTICS_DATA.wins = 0;
+		PLAYER_STATISTICS_DATA.winingStreak = 0;
+		PLAYER_STATISTICS_DATA.maxWiningStreak = 0;
+	}
+}
+
+function updatePlayerStatistics() {
+	// win or loose
+	if (wordleGameLogic.hasGuessedWord 
+		|| wordleGameLogic.remainingLives === 0) 
+	{
+		PLAYER_STATISTICS_DATA.played += 1;
+	}
+
+	// win
+	if (wordleGameLogic.hasGuessedWord)
+		PLAYER_STATISTICS_DATA.wins += 1;
+
+	// on a wining streak
+	if (PLAYER_STATISTICS_DATA.wins > 1)
+		PLAYER_STATISTICS_DATA.winingStreak += 1;
+
+	// lost wining streak
+	if (!wordleGameLogic.hasGuessedWord 
+		&& wordleGameLogic.remainingLives === 0
+		&& PLAYER_STATISTICS_DATA.winingStreak > 0) 
+	{
+		PLAYER_STATISTICS_DATA.wins = 0;
+		PLAYER_STATISTICS_DATA.winingStreak = 0;
+	}
+
+	if (PLAYER_STATISTICS_DATA.winingStreak 
+		> PLAYER_STATISTICS_DATA.maxWiningStreak) 
+	{
+		PLAYER_STATISTICS_DATA
+		.maxWiningStreak = PLAYER_STATISTICS_DATA.winingStreak
+	}
+	
+	updateWordleStatsView();
+	savePlayerStatistics();
+}
+
+function updateWordleStatsView() {
+	wordleStats.querySelector('#wordle-stats-played .value')
+		.innerText = PLAYER_STATISTICS_DATA.played;
+	wordleStats.querySelector('#wordle-stats-wins .value')
+		.innerText = PLAYER_STATISTICS_DATA.wins;
+	wordleStats.querySelector('#wordle-stats-wining-streak .value')
+		.innerText = PLAYER_STATISTICS_DATA.winingStreak;
+	wordleStats.querySelector('#wordle-stats-max-wining-streak .value')
+		.innerText = PLAYER_STATISTICS_DATA.maxWiningStreak;
+}
+
+// ============================================================
+// ============================================================
 
 function handleWordleGameplay() {
+	console.log('CHEAT', wordleGameLogic.wordToGuess);
 	currentLetterIndex = 0;
-	updateWordleBoard();
+	updateBoardGameplay();
 	updateKeyboardGuessedLetters();
-	displaySessionOutcome();
-	handleSessionBtnUsability();
+	updateWordleStatsView();
+	handleGameAlterAbility();
 }
 
+function clearUserInformation() {
+	localStorage.removeItem(PLAYER_STATISTICS_DATA_KEY);
+	wordleGameLogic.clearStoredData();
+}
+
+let currentLetterIndex = 0;
 const wordleGameLogic = new Wordle();
-const refreshWordleGame = setInterval(() => {
-	let currentTime = new Date().toLocaleTimeString("en-US", { houe12: false });
+const startNewWordleGameLogic = setInterval(() => {
+	let currentTime = new Date().toLocaleTimeString("en-US", 
+		{ houe12: false });
 	let currentHour = Number(currentTime.split(":")[0]);
 	if (currentHour<1) wordleGameLogic.newGame();
 }, 1000)
 
-
-let currentLetterIndex = 0;
-let visibleSectionElement = null;
-
-let wordleSectionSelectors = ['wordle-game', 'wordle-game__stats', 'settings', 'how-to-play'];
-const wordleSectionElements = wordleSectionSelectors.map(sl => document.getElementById(sl));
-
-const observeClassOption = { attributes: true };
-const wordleSectionsObserver = new IntersectionObserver(handleWordleSections, {});
-const wordleSectionClassObserver = new MutationObserver(handleWordleSectionsClass);
-
-visibleSectionElement = wordleSectionElements[0];
-wordleSectionElements.forEach(section => 
-	wordleSectionClassObserver.observe(section, observeClassOption));
-
+const wordleStats = document.querySelector('.wordle-game__stats');
+const wordleFlashMsg = document.querySelector('.wordle-game__flash-msgs');
+const wordleOutcomeDisplay = document.querySelector('.wordle-game__outcome');
 const wordleBoard = document.querySelector('.wordle-game__board');
 const wordleKeyboard = document.querySelector('.wordle-game__keyboard');
-const wordleOutcomeDisplay = document.querySelector('.wordle-game__outcome');
-const wordleSessionContent = document.querySelector('.wordle-game__session');
-
 const wordleKeyboardKeys = document.querySelectorAll('.wordle-game__keyboard-key');
-wordleKeyboardKeys.forEach(key => key.addEventListener('click', handleWordleKeyboardInput));
+wordleKeyboardKeys.forEach(key =>  key.addEventListener('click', handleWordleKeyboardInput));
 
-const wordleFlashMsg = document.querySelector('.wordle-game__flash-msgs');
-
-const wordleGameSection = document.querySelector('#wordle-game');
-wordleSectionsObserver.observe(wordleGameSection);
-
-const triggerToggles = document.querySelectorAll('[data-toggle]');
-triggerToggles.forEach(toggle => toggle.addEventListener('click', handleToggleTrigger));
-
-const dismissToggles = document.querySelectorAll('[data-dismiss]');
-dismissToggles.forEach(toggle => toggle.addEventListener('click', handleToggleDismiss));
-
-const colorThemeToggles = document.querySelectorAll(`[data-toggle='color-theme']`)
-colorThemeToggles.forEach(toggle => toggle.addEventListener('input', handleThemeToggle));
-
-const navbarNav = document.querySelector('.navbar__nav')
-wordleSectionClassObserver.observe(navbarNav, observeClassOption);
-
-const navMenuItems = document.querySelectorAll('.navbar__menu-item')
-navMenuItems.forEach(navItem => navItem.addEventListener('click', handleNavMenuItem));
+// ============================================================
+// ============================================================
 
 document.addEventListener('keydown', e => {
 	wordleSectionElements.forEach((element, index) => {
@@ -388,6 +533,7 @@ document.addEventListener('keydown', e => {
 })
 
 document.addEventListener('DOMContentLoaded', () => {
+	loadInPlayerStatistics();
 	handleWordleGameplay();
 
 	// swith on toggle for respective theme
