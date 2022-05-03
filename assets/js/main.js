@@ -292,7 +292,10 @@ function updateBoardGameplay() {
 			}	
 		}
 
-		if (wordleGameLogic.remainingLives === 0) {
+		if (!wordleGameLogic.hasGuessedWord
+			&& wordleGameLogic.remainingLives === 0) {
+			
+			// display outcome if lost
 			if (e.animationName === WORDLE_TILE_STATE_ANIMATION.reveal) {
 				showGameplayOutcome(wordleGameLogic.wordToGuess.toUpperCase());
 			}
