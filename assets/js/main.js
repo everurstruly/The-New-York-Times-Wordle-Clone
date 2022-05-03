@@ -444,30 +444,35 @@ function loadInPlayerStatistics() {
 }
 
 function updatePlayerStatistics() {
+	const STREAK_POINT = 3;
+
 	// win or loose
 	if (wordleGameLogic.hasGuessedWord 
 		|| wordleGameLogic.remainingLives === 0) 
 	{
-		PLAYER_STATISTICS_DATA.played += 1;
+		PLAYER_STATISTICS_DATA.played++;
 	}
 
 	// win
-	if (wordleGameLogic.hasGuessedWord)
-		PLAYER_STATISTICS_DATA.wins += 1;
+	if (wordleGameLogic.hasGuessedWord) {
+		PLAYER_STATISTICS_DATA.wins++;
 
-	// on a wining streak
-	if (PLAYER_STATISTICS_DATA.wins > 1)
-		PLAYER_STATISTICS_DATA.winingStreak += 1;
+		// on a wining streak
+		PLAYER_STATISTICS_DATA.winingStreak = Math.floor(
+			PLAYER_STATISTICS_DATA.wins / STREAK_POINT);
+	}
 
-	// lost wining streak
+	// loose
 	if (!wordleGameLogic.hasGuessedWord 
-		&& wordleGameLogic.remainingLives === 0
-		&& PLAYER_STATISTICS_DATA.winingStreak > 0) 
+		&& wordleGameLogic.remainingLives === 0) 
 	{
 		PLAYER_STATISTICS_DATA.wins = 0;
+
+		// lost wining streak
 		PLAYER_STATISTICS_DATA.winingStreak = 0;
 	}
 
+	// broken wining streak record
 	if (PLAYER_STATISTICS_DATA.winingStreak 
 		> PLAYER_STATISTICS_DATA.maxWiningStreak) 
 	{
@@ -494,12 +499,12 @@ function updateWordleStatsView() {
 // ============================================================
 
 function handleWordleGameplay() {
-	console.log('CHEAT', wordleGameLogic.wordToGuess);
 	currentLetterIndex = 0;
 	updateBoardGameplay();
 	updateKeyboardGuessedLetters();
 	updateWordleStatsView();
 	handleGameAlterAbility();
+	//console.log('CHEAT', wordleGameLogic.wordToGuess);
 }
 
 function clearUserInformation() {
