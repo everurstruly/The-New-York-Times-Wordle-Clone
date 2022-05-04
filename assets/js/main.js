@@ -514,12 +514,12 @@ function clearUserInformation() {
 
 let currentLetterIndex = 0;
 const wordleGameLogic = new Wordle();
-const startNewWordleGameLogic = setInterval(() => {
+/*const startNewWordleGameLogic = setInterval(() => {
 	let currentTime = new Date().toLocaleTimeString("en-US", 
 		{ houe12: false });
 	let currentHour = Number(currentTime.split(":")[0]);
 	if (currentHour<1) wordleGameLogic.newGame();
-}, 1000)
+}, 1000)*/
 
 const wordleStats = document.querySelector('.wordle-game__stats');
 const wordleFlashMsg = document.querySelector('.wordle-game__flash-msgs');
