@@ -1,4 +1,4 @@
-# Wordle - The New York Times Clone
+#  The New York Times Worlde Clone
 
 Welcome to the **Wordle - The New York Times Clone** project! This repository contains a clone of the popular word-guessing game, Wordle, implemented using vanilla JavaScript, HTML, and CSS.
 
